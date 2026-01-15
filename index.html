@@ -8,7 +8,41 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui; flex-direction: column;">
+        <p>Cargando aplicación...</p>
+        <p id="loading-status" style="font-size: 12px; color: #ffffff; margin-top: 10px;"></p>
+      </div>
+    </div>
+    <script>
+      // Verificar que el módulo se carga
+      const statusEl = document.getElementById('loading-status');
+      let loadTimeout;
+      
+      function updateStatus(msg) {
+        if (statusEl) {
+          statusEl.textContent = msg;
+        }
+      }
+      
+      // Timeout después de 10 segundos
+      loadTimeout = setTimeout(function() {
+        updateStatus('El JavaScript no se está cargando. Verifica la conexión.');
+      }, 10000);
+      
+      // Limpiar timeout cuando el módulo se carga
+      window.addEventListener('load', function() {
+        clearTimeout(loadTimeout);
+        updateStatus('Cargando módulos...');
+      });
+      
+      // Capturar errores de carga
+      window.addEventListener('error', function(e) {
+        clearTimeout(loadTimeout);
+        updateStatus('Error al cargar: ' + (e.message || 'Error desconocido'));
+        console.error('Error:', e);
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

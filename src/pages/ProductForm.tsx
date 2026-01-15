@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -13,9 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, ImagePlus, Save } from 'lucide-react';
+import { ArrowLeft, ImagePlus, Save, X } from 'lucide-react';
 import { categories, Product } from '@/data/mockData';
 import { toast } from 'sonner';
+import { uploadImage, validateImageFile } from '@/lib/storage';
 
 export default function ProductForm() {
   const { id } = useParams();
@@ -43,6 +44,10 @@ export default function ProductForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (existingProduct) {
@@ -55,8 +60,39 @@ export default function ProductForm() {
         description: existingProduct.description,
         image: existingProduct.image
       });
+      setImagePreview(existingProduct.image);
     }
   }, [existingProduct]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      toast.error(validation.error || 'Error al validar la imagen');
+      return;
+    }
+
+    setImageFile(file);
+    setErrors(prev => ({ ...prev, image: '' }));
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setFormData(prev => ({ ...prev, image: '' }));
+  };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -68,7 +104,9 @@ export default function ProductForm() {
     }
     if (!formData.category) newErrors.category = 'Selecciona una categoría';
     if (!formData.description.trim()) newErrors.description = 'La descripción es requerida';
-    if (!formData.image.trim()) newErrors.image = 'La URL de imagen es requerida';
+    if (!imageFile && !formData.image.trim()) {
+      newErrors.image = 'Debes subir una imagen o proporcionar una URL';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -84,26 +122,50 @@ export default function ProductForm() {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      let imageUrl = formData.image.trim();
 
-    const productData = {
-      businessId: formData.businessId,
-      name: formData.name.trim(),
-      price: parseFloat(formData.price),
-      category: formData.category,
-      status: formData.status,
-      description: formData.description.trim(),
-      image: formData.image.trim()
-    };
+      // Upload image if a new file was selected
+      if (imageFile) {
+        setIsUploadingImage(true);
+        try {
+          imageUrl = await uploadImage(imageFile, 'products');
+          toast.success('Imagen subida exitosamente');
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          toast.error('Error al subir la imagen. Intenta nuevamente.');
+          setIsSubmitting(false);
+          setIsUploadingImage(false);
+          return;
+        } finally {
+          setIsUploadingImage(false);
+        }
+      }
 
-    if (isEditing && id) {
-      updateProduct(id, productData);
-    } else {
-      addProduct(productData);
+      const productData = {
+        businessId: formData.businessId,
+        name: formData.name.trim(),
+        price: parseFloat(formData.price),
+        category: formData.category,
+        status: formData.status,
+        description: formData.description.trim(),
+        image: imageUrl,
+        postedToMarketplace: existingProduct?.postedToMarketplace ?? false
+      };
+
+      if (isEditing && id) {
+        await updateProduct(id, productData);
+      } else {
+        await addProduct(productData);
+      }
+
+      navigate('/products');
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Error al guardar el producto');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    navigate('/products');
   };
 
   return (
@@ -259,34 +321,52 @@ export default function ProductForm() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="image">URL de la imagen *</Label>
-                  <Input
-                    id="image"
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    placeholder="https://..."
-                    className={errors.image ? 'border-destructive' : ''}
-                  />
-                  {errors.image && (
-                    <p className="text-sm text-destructive">{errors.image}</p>
-                  )}
+                  <Label htmlFor="image">Imagen del producto *</Label>
+                  <div className="space-y-2">
+                    <Input
+                      ref={fileInputRef}
+                      id="image"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                      onChange={handleImageChange}
+                      className={errors.image ? 'border-destructive' : ''}
+                    />
+                    {errors.image && (
+                      <p className="text-sm text-destructive">{errors.image}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Formatos permitidos: JPEG, PNG, WEBP, GIF. Tamaño máximo: 5MB
+                    </p>
+                  </div>
                 </div>
 
                 {/* Image Preview */}
-                <div className="aspect-square rounded-lg border-2 border-dashed border-border bg-muted/50 overflow-hidden">
-                  {formData.image ? (
-                    <img 
-                      src={formData.image} 
-                      alt="Preview"
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
+                <div className="relative aspect-square rounded-lg border-2 border-dashed border-border bg-muted/50 overflow-hidden">
+                  {imagePreview ? (
+                    <>
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview"
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={handleRemoveImage}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
                       <ImagePlus className="h-10 w-10 mb-2" />
                       <p className="text-sm">Vista previa</p>
+                      <p className="text-xs mt-1">Sube una imagen</p>
                     </div>
                   )}
                 </div>
@@ -297,12 +377,12 @@ export default function ProductForm() {
             <Button 
               type="submit" 
               className="w-full h-12"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploadingImage}
             >
-              {isSubmitting ? (
+              {isSubmitting || isUploadingImage ? (
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  Guardando...
+                  {isUploadingImage ? 'Subiendo imagen...' : 'Guardando...'}
                 </div>
               ) : (
                 <div className="flex items-center gap-2">

@@ -40,7 +40,7 @@ export function Sidebar() {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-[55] lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -48,7 +48,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-64 bg-sidebar transition-transform duration-300 ease-in-out lg:translate-x-0",
+          "fixed left-0 top-0 z-[60] h-full w-64 bg-sidebar transition-transform duration-300 ease-in-out lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >

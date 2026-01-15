@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -6,6 +6,7 @@ import { ProductCard } from '@/components/ui/product-card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -23,15 +24,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Package, Search, Filter } from 'lucide-react';
+import { Plus, Package, Search, Filter, ChevronDown, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
+import { cn } from '@/lib/utils';
 import { categories } from '@/data/mockData';
 
 export default function Products() {
-  const { activeBusiness, getProductsByBusiness, deleteProduct } = useApp();
+  const { activeBusiness, getProductsByBusiness, deleteProduct, updateProduct } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [marketplaceFilter, setMarketplaceFilter] = useState('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  const ITEMS_PER_PAGE = 20;
 
   const allProducts = activeBusiness 
     ? getProductsByBusiness(activeBusiness.id) 
@@ -43,15 +58,77 @@ export default function Products() {
         product.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
       const matchesStatus = statusFilter === 'all' || product.status === statusFilter;
+      const matchesMarketplace = marketplaceFilter === 'all' || 
+        (marketplaceFilter === 'posted' && product.postedToMarketplace) ||
+        (marketplaceFilter === 'not-posted' && !product.postedToMarketplace);
       
-      return matchesSearch && matchesCategory && matchesStatus;
+      return matchesSearch && matchesCategory && matchesStatus && matchesMarketplace;
     });
-  }, [allProducts, searchTerm, categoryFilter, statusFilter]);
+  }, [allProducts, searchTerm, categoryFilter, statusFilter, marketplaceFilter]);
+
+  // Resetear página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter, statusFilter, marketplaceFilter]);
+
+  // Calcular productos paginados
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Generar números de página para mostrar
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      // Mostrar todas las páginas si son pocas
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Mostrar primera página
+      pages.push(1);
+      
+      if (currentPage > 3) {
+        pages.push('ellipsis-start');
+      }
+      
+      // Mostrar páginas alrededor de la actual
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      if (currentPage < totalPages - 2) {
+        pages.push('ellipsis-end');
+      }
+      
+      // Mostrar última página
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
 
   const handleDelete = () => {
     if (deleteId) {
       deleteProduct(deleteId);
       setDeleteId(null);
+    }
+  };
+
+  const handleMarkAsSold = async (id: string) => {
+    await updateProduct(id, { status: 'sold' });
+  };
+
+  const handleToggleMarketplace = async (id: string) => {
+    const product = allProducts.find(p => p.id === id);
+    if (product) {
+      await updateProduct(id, { postedToMarketplace: !product.postedToMarketplace });
     }
   };
 
@@ -79,9 +156,10 @@ export default function Products() {
     >
       {/* Filters */}
       <div className="bg-card rounded-xl border border-border p-4 mb-6 animate-fade-in">
-        <div className="flex flex-col lg:flex-row gap-4">
+        {/* Desktop: All in one line */}
+        <div className="hidden lg:flex items-center gap-3">
           {/* Search */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar productos..."
@@ -90,26 +168,23 @@ export default function Products() {
               className="pl-10"
             />
           </div>
-
+          
           {/* Category Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground lg:hidden" />
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full lg:w-48">
-                <SelectValue placeholder="Categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las categorías</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las categorías</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full lg:w-40">
+            <SelectTrigger className="w-40">
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
             <SelectContent>
@@ -120,32 +195,252 @@ export default function Products() {
             </SelectContent>
           </Select>
 
+          {/* Marketplace Filter */}
+          <Select value={marketplaceFilter} onValueChange={setMarketplaceFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Marketplace" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="posted">Subidos a Marketplace</SelectItem>
+              <SelectItem value="not-posted">No subidos</SelectItem>
+            </SelectContent>
+          </Select>
+
           {/* Add Button */}
           <Button asChild>
             <Link to="/products/new">
               <Plus className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Nuevo</span>
+              Nuevo
             </Link>
           </Button>
         </div>
+
+        {/* Mobile: Collapsible layout */}
+        <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen} className="lg:hidden">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar productos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button asChild size="sm">
+              <Link to="/products/new">
+                <Plus className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+          
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" size="sm" className="w-full justify-between">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                <span>Filtros</span>
+                {(categoryFilter !== 'all' || statusFilter !== 'all' || marketplaceFilter !== 'all') && (
+                  <Badge variant="secondary" className="ml-1">
+                    {[
+                      categoryFilter !== 'all' ? 1 : 0,
+                      statusFilter !== 'all' ? 1 : 0,
+                      marketplaceFilter !== 'all' ? 1 : 0
+                    ].reduce((a, b) => a + b, 0)}
+                  </Badge>
+                )}
+              </div>
+              <ChevronDown className={`h-4 w-4 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+
+          {/* Mobile: Collapsible filters */}
+          <CollapsibleContent className="lg:hidden mt-3 space-y-3">
+            <div className="space-y-3 pt-3 border-t border-border">
+              {/* Category Filter */}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Categoría
+                </label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas las categorías</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Estado
+                </label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="available">Disponible</SelectItem>
+                    <SelectItem value="reserved">Reservado</SelectItem>
+                    <SelectItem value="sold">Vendido</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Marketplace Filter */}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Marketplace
+                </label>
+                <Select value={marketplaceFilter} onValueChange={setMarketplaceFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Marketplace" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="posted">Subidos a Marketplace</SelectItem>
+                    <SelectItem value="not-posted">No subidos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Clear Filters Button */}
+              {(categoryFilter !== 'all' || statusFilter !== 'all' || marketplaceFilter !== 'all') && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => {
+                    setCategoryFilter('all');
+                    setStatusFilter('all');
+                    setMarketplaceFilter('all');
+                  }}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Limpiar filtros
+                </Button>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
 
       {/* Results count */}
-      <p className="text-sm text-muted-foreground mb-4">
-        {filteredProducts.length} de {allProducts.length} producto{allProducts.length !== 1 ? 's' : ''}
-      </p>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-muted-foreground">
+          Mostrando {paginatedProducts.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredProducts.length)} de {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''}
+          {filteredProducts.length !== allProducts.length && (
+            <span className="ml-1">
+              (de {allProducts.length} total{allProducts.length !== 1 ? 'es' : ''})
+            </span>
+          )}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Página {currentPage} de {totalPages}
+        </p>
+      </div>
 
       {/* Products Grid */}
-      {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredProducts.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              onDelete={setDeleteId}
-            />
-          ))}
-        </div>
+      {paginatedProducts.length > 0 ? (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {paginatedProducts.map((product) => (
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                onDelete={setDeleteId}
+                onMarkAsSold={handleMarkAsSold}
+                onToggleMarketplace={handleToggleMarketplace}
+              />
+            ))}
+          </div>
+          
+          {/* Pagination - Always visible */}
+          <div className="mt-6">
+            <Pagination>
+                <PaginationContent className="gap-2">
+                  <PaginationItem>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) {
+                          setCurrentPage(currentPage - 1);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }}
+                      size="default"
+                      className={cn(
+                        currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer',
+                        'gap-1.5 px-3 sm:px-4'
+                      )}
+                    >
+                      <ChevronLeft className="h-4 w-4 flex-shrink-0" />
+                      <span className="hidden sm:inline whitespace-nowrap">Anterior</span>
+                      <span className="sm:hidden whitespace-nowrap">Ant</span>
+                    </PaginationLink>
+                  </PaginationItem>
+                  
+                  {getPageNumbers().map((page, index) => {
+                    if (page === 'ellipsis-start' || page === 'ellipsis-end') {
+                      return (
+                        <PaginationItem key={`ellipsis-${index}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    
+                    const pageNum = page as number;
+                    return (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(pageNum);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          isActive={currentPage === pageNum}
+                          size="icon"
+                          className="cursor-pointer min-w-[2.5rem]"
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) {
+                          setCurrentPage(currentPage + 1);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }}
+                      size="default"
+                      className={cn(
+                        currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer',
+                        'gap-1.5 px-3 sm:px-4'
+                      )}
+                    >
+                      <span className="hidden sm:inline whitespace-nowrap">Siguiente</span>
+                      <span className="sm:hidden whitespace-nowrap">Sig</span>
+                      <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                    </PaginationLink>
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+        </>
       ) : allProducts.length > 0 ? (
         <EmptyState
           icon={Search}
@@ -156,6 +451,7 @@ export default function Products() {
               setSearchTerm('');
               setCategoryFilter('all');
               setStatusFilter('all');
+              setMarketplaceFilter('all');
             }}>
               Limpiar filtros
             </Button>

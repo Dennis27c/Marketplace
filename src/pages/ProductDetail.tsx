@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -23,7 +23,8 @@ import {
   Download,
   Copy,
   Check,
-  ClipboardList
+  ClipboardList,
+  Facebook
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -36,12 +37,25 @@ const statusConfig = {
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getProductById, deleteProduct, businesses } = useApp();
+  const { getProductById, deleteProduct, businesses, updateProduct } = useApp();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const product = id ? getProductById(id) : null;
   const business = product ? businesses.find(b => b.id === product.businessId) : null;
+
+  // Scroll al inicio cuando se carga la página o cambia el ID
+  useEffect(() => {
+    // Scroll instantáneo para mejor compatibilidad en móviles
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
+    // Para navegadores que soportan smooth scroll, usar después de un pequeño delay
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }, 0);
+  }, [id]);
 
   if (!product) {
     return (
@@ -170,9 +184,17 @@ ${product.description}`;
           {/* Header */}
           <div className="bg-card rounded-xl border border-border p-6">
             <div className="flex items-start justify-between mb-4">
-              <Badge variant={status.variant} className="text-sm">
-                {status.label}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant={status.variant} className="text-sm">
+                  {status.label}
+                </Badge>
+                {product.postedToMarketplace && (
+                  <Badge variant="default" className="text-sm bg-blue-600 hover:bg-blue-700">
+                    <Facebook className="h-3 w-3 mr-1" />
+                    En Marketplace
+                  </Badge>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <Button asChild variant="outline" size="sm">
                   <Link to={`/products/${product.id}/edit`}>
@@ -214,6 +236,27 @@ ${product.description}`;
                 </div>
               </div>
             )}
+
+            {/* Marketplace Status */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <Button
+                variant={product.postedToMarketplace ? "default" : "outline"}
+                className={product.postedToMarketplace ? "w-full bg-blue-600 hover:bg-blue-700" : "w-full"}
+                onClick={async () => {
+                  await updateProduct(product.id, { postedToMarketplace: !product.postedToMarketplace });
+                  toast.success(
+                    product.postedToMarketplace 
+                      ? 'Marcado como no subido a Marketplace' 
+                      : 'Marcado como subido a Marketplace'
+                  );
+                }}
+              >
+                <Facebook className="h-4 w-4 mr-2" />
+                {product.postedToMarketplace 
+                  ? 'Marcado como subido a Marketplace' 
+                  : 'Marcar como subido a Marketplace'}
+              </Button>
+            </div>
           </div>
 
           {/* Description */}

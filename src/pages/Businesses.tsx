@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { uploadImage, validateImageFile } from '@/lib/storage';
+import { toast } from 'sonner';
+import { X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -55,6 +58,10 @@ export default function Businesses() {
     logo: '',
     description: ''
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>('');
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenDialog = (business?: Business) => {
     if (business) {
@@ -64,23 +71,105 @@ export default function Businesses() {
         logo: business.logo,
         description: business.description
       });
+      setLogoPreview(business.logo);
     } else {
       setEditingBusiness(null);
       setFormData({ name: '', logo: '', description: '' });
+      setLogoPreview('');
+    }
+    setLogoFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingBusiness) {
-      updateBusiness(editingBusiness.id, formData);
-    } else {
-      addBusiness(formData);
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      toast.error(validation.error || 'Error al validar la imagen');
+      return;
     }
-    setIsDialogOpen(false);
-    setFormData({ name: '', logo: '', description: '' });
-    setEditingBusiness(null);
+
+    setLogoFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoFile(null);
+    setLogoPreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setFormData(prev => ({ ...prev, logo: '' }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim() || !formData.description.trim()) {
+      toast.error('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    if (!logoFile && !formData.logo.trim()) {
+      toast.error('Debes subir un logo o proporcionar una URL');
+      return;
+    }
+
+    setIsUploadingLogo(true);
+
+    try {
+      let logoUrl = formData.logo.trim();
+
+      // Upload logo if a new file was selected
+      if (logoFile) {
+        try {
+          logoUrl = await uploadImage(logoFile, 'businesses');
+          toast.success('Logo subido exitosamente');
+        } catch (error) {
+          console.error('Error uploading logo:', error);
+          toast.error('Error al subir el logo. Intenta nuevamente.');
+          setIsUploadingLogo(false);
+          return;
+        }
+      }
+
+      const businessData = {
+        name: formData.name.trim(),
+        logo: logoUrl,
+        description: formData.description.trim()
+      };
+
+      if (editingBusiness) {
+        await updateBusiness(editingBusiness.id, businessData);
+      } else {
+        await addBusiness(businessData);
+      }
+
+      setIsDialogOpen(false);
+      setFormData({ name: '', logo: '', description: '' });
+      setLogoPreview('');
+      setLogoFile(null);
+      setEditingBusiness(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Error al guardar el negocio');
+    } finally {
+      setIsUploadingLogo(false);
+    }
   };
 
   const handleDelete = () => {
@@ -132,14 +221,35 @@ export default function Businesses() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="logo">URL del logo</Label>
+                  <Label htmlFor="logo">Logo del negocio</Label>
                   <Input
+                    ref={fileInputRef}
                     id="logo"
-                    value={formData.logo}
-                    onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                    placeholder="https://..."
-                    required
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                    onChange={handleLogoChange}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Formatos permitidos: JPEG, PNG, WEBP, GIF. Tamaño máximo: 5MB
+                  </p>
+                  {logoPreview && (
+                    <div className="relative mt-2">
+                      <img 
+                        src={logoPreview} 
+                        alt="Logo preview"
+                        className="h-24 w-24 rounded-lg object-cover border border-border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                        onClick={handleRemoveLogo}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Descripción</Label>
@@ -157,8 +267,15 @@ export default function Businesses() {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit">
-                  {editingBusiness ? 'Guardar Cambios' : 'Crear Negocio'}
+                <Button type="submit" disabled={isUploadingLogo}>
+                  {isUploadingLogo ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      Subiendo logo...
+                    </div>
+                  ) : (
+                    editingBusiness ? 'Guardar Cambios' : 'Crear Negocio'
+                  )}
                 </Button>
               </DialogFooter>
             </form>
