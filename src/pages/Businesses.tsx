@@ -185,14 +185,14 @@ export default function Businesses() {
       subtitle="Gestiona todos tus negocios registrados"
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-muted-foreground">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-muted-foreground">
           {businesses.length} negocio{businesses.length !== 1 ? 's' : ''} registrado{businesses.length !== 1 ? 's' : ''}
         </p>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button onClick={() => handleOpenDialog()} size="sm">
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
               Nuevo Negocio
             </Button>
           </DialogTrigger>
@@ -285,7 +285,7 @@ export default function Businesses() {
 
       {/* Business Grid */}
       {businesses.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {businesses.map((business) => {
             const productCount = getProductsByBusiness(business.id).length;
             const isActive = activeBusiness?.id === business.id;
@@ -294,45 +294,45 @@ export default function Businesses() {
               <div
                 key={business.id}
                 className={cn(
-                  "bg-card rounded-xl border-2 p-6 card-hover animate-fade-in relative",
+                  "bg-card rounded-lg border-2 p-4 card-hover animate-fade-in relative",
                   isActive ? "border-primary" : "border-border"
                 )}
               >
                 {isActive && (
-                  <div className="absolute top-4 right-4">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium">
-                      <CheckCircle className="h-3 w-3" />
+                  <div className="absolute top-3 right-3">
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
+                      <CheckCircle className="h-2.5 w-2.5" />
                       Activo
                     </div>
                   </div>
                 )}
 
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3">
                   <img 
                     src={business.logo} 
                     alt={business.name}
-                    className="h-16 w-16 rounded-xl object-cover flex-shrink-0"
+                    className="h-12 w-12 rounded-lg object-cover flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground truncate pr-16">
+                    <h3 className="text-sm font-semibold text-foreground truncate pr-12">
                       {business.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
                       {business.description}
                     </p>
-                    <div className="flex items-center gap-1.5 mt-3 text-sm text-muted-foreground">
-                      <Package className="h-4 w-4" />
+                    <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                      <Package className="h-3.5 w-3.5" />
                       {productCount} producto{productCount !== 1 ? 's' : ''}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 mt-6 pt-4 border-t border-border">
+                <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-border">
                   {!isActive && (
                     <Button 
                       variant="default" 
                       size="sm" 
-                      className="flex-1"
+                      className="flex-1 text-xs h-8"
                       onClick={() => setActiveBusiness(business)}
                     >
                       Seleccionar
@@ -341,17 +341,18 @@ export default function Businesses() {
                   <Button 
                     variant="outline" 
                     size="sm"
+                    className="h-8 w-8 p-0"
                     onClick={() => handleOpenDialog(business)}
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-3.5 w-3.5" />
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm"
+                    className="h-8 w-8 p-0 text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     onClick={() => setDeleteId(business.id)}
-                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
@@ -364,8 +365,8 @@ export default function Businesses() {
           title="Sin negocios"
           description="Aún no has registrado ningún negocio. Comienza creando uno nuevo."
           action={
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button onClick={() => handleOpenDialog()} size="sm">
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
               Crear Negocio
             </Button>
           }
@@ -374,7 +375,7 @@ export default function Businesses() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent onEscapeKeyDown={() => setDeleteId(null)}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar negocio?</AlertDialogTitle>
             <AlertDialogDescription>

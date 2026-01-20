@@ -30,7 +30,7 @@ export default function Dashboard() {
       subtitle="Resumen general de tu actividad"
     >
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
         <StatCard
           title="Total Negocios"
           value={businesses.length}
@@ -50,16 +50,16 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex flex-wrap gap-3 mb-8">
-        <Button asChild>
+      <div className="flex flex-wrap gap-2 mb-6">
+        <Button asChild size="sm">
           <Link to="/products/new">
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
             Nuevo Producto
           </Link>
         </Button>
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" size="sm">
           <Link to="/businesses">
-            <Building2 className="h-4 w-4 mr-2" />
+            <Building2 className="h-3.5 w-3.5 mr-1.5" />
             Gestionar Negocios
           </Link>
         </Button>
@@ -67,22 +67,22 @@ export default function Dashboard() {
 
       {/* Active Business Info */}
       {activeBusiness && (
-        <div className="bg-card rounded-xl border border-border p-6 mb-8 animate-fade-in">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="bg-card rounded-lg border border-border p-4 mb-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <img 
               src={activeBusiness.logo} 
               alt={activeBusiness.name}
-              className="h-16 w-16 rounded-xl object-cover flex-shrink-0"
+              className="h-12 w-12 rounded-lg object-cover flex-shrink-0"
             />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-muted-foreground">Negocio Activo</p>
-              <h3 className="text-xl font-semibold text-foreground">{activeBusiness.name}</h3>
-              <p className="text-sm text-muted-foreground line-clamp-1">{activeBusiness.description}</p>
+              <p className="text-xs font-medium text-muted-foreground">Negocio Activo</p>
+              <h3 className="text-base font-semibold text-foreground">{activeBusiness.name}</h3>
+              <p className="text-xs text-muted-foreground line-clamp-1">{activeBusiness.description}</p>
             </div>
-            <Button asChild variant="outline" className="w-full sm:w-auto flex-shrink-0">
+            <Button asChild variant="outline" size="sm" className="w-full sm:w-auto flex-shrink-0">
               <Link to="/products">
                 Ver Productos
-                <ArrowRight className="h-4 w-4 ml-2" />
+                <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
               </Link>
             </Button>
           </div>
@@ -91,18 +91,18 @@ export default function Dashboard() {
 
       {/* Recent Products */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">Productos Recientes</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-foreground">Productos Recientes</h2>
           <Button asChild variant="ghost" size="sm">
             <Link to="/products">
               Ver todos
-              <ArrowRight className="h-4 w-4 ml-1" />
+              <ArrowRight className="h-3.5 w-3.5 ml-1" />
             </Link>
           </Button>
         </div>
 
         {recentProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {recentProducts.map((product) => (
               <ProductCard key={product.id} product={product} showActions={false} />
             ))}
@@ -113,9 +113,9 @@ export default function Dashboard() {
             title="Sin productos"
             description="Aún no has agregado ningún producto. Comienza creando uno nuevo."
             action={
-              <Button asChild>
+              <Button asChild size="sm">
                 <Link to="/products/new">
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
                   Agregar Producto
                 </Link>
               </Button>

@@ -6,6 +6,14 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -16,7 +24,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { 
-  ArrowLeft, 
   Edit, 
   Trash2, 
   Package,
@@ -129,14 +136,14 @@ ${product.description}`;
       variant="outline"
       size="sm"
       onClick={() => copyToClipboard(text, field)}
-      className="flex items-center gap-2"
+      className="flex items-center gap-1.5 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
     >
       {copiedField === field ? (
-        <Check className="h-4 w-4 text-success" />
+        <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-success" />
       ) : (
-        <Copy className="h-4 w-4" />
+        <Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       )}
-      {label}
+      <span className="truncate">{label}</span>
     </Button>
   );
 
@@ -145,21 +152,41 @@ ${product.description}`;
       title="Detalle del Producto" 
       subtitle={product.name}
     >
-      {/* Back Button */}
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        onClick={() => navigate(-1)}
-        className="mb-6"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Volver
-      </Button>
+      {/* Breadcrumb */}
+      <Breadcrumb className="mb-3">
+        <BreadcrumbList className="text-xs sm:text-sm">
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/dashboard" className="text-muted-foreground hover:text-foreground">
+                Inicio
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator>
+            <span className="text-muted-foreground"> &gt; </span>
+          </BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/products" className="text-muted-foreground hover:text-foreground">
+                Productos
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator>
+            <span className="text-muted-foreground"> &gt; </span>
+          </BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <BreadcrumbPage className="font-semibold text-foreground text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none">
+              {product.name}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Image Section */}
-        <div className="space-y-4 animate-fade-in">
-          <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="space-y-3 animate-fade-in">
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="aspect-square">
               <img 
                 src={product.image} 
@@ -171,77 +198,80 @@ ${product.description}`;
           
           <Button 
             variant="outline" 
+            size="sm"
             className="w-full"
             onClick={downloadImage}
           >
-            <Download className="h-4 w-4 mr-2" />
-            Descargar Imagen
+            <Download className="h-3.5 w-3.5 mr-1.5" />
+            <span className="text-xs sm:text-sm">Descargar Imagen</span>
           </Button>
         </div>
 
         {/* Info Section */}
-        <div className="space-y-6 animate-slide-in-right">
+        <div className="space-y-4 lg:space-y-6 animate-slide-in-right">
           {/* Header */}
-          <div className="bg-card rounded-xl border border-border p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Badge variant={status.variant} className="text-sm">
+          <div className="bg-card rounded-lg border border-border p-4 lg:p-6">
+            <div className="flex items-start justify-between mb-3 lg:mb-4">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Badge variant={status.variant} className="text-[10px] sm:text-xs px-2 py-0.5">
                   {status.label}
                 </Badge>
                 {product.postedToMarketplace && (
-                  <Badge variant="default" className="text-sm bg-blue-600 hover:bg-blue-700">
-                    <Facebook className="h-3 w-3 mr-1" />
-                    En Marketplace
+                  <Badge variant="default" className="text-[10px] sm:text-xs bg-blue-600 hover:bg-blue-700 px-2 py-0.5">
+                    <Facebook className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
+                    <span className="hidden sm:inline">En Marketplace</span>
+                    <span className="sm:hidden">Marketplace</span>
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <Button asChild variant="outline" size="sm">
+              <div className="flex items-center gap-1.5">
+                <Button asChild variant="outline" size="sm" className="h-8 px-2 sm:px-3">
                   <Link to={`/products/${product.id}/edit`}>
-                    <Edit className="h-4 w-4 mr-1" />
-                    Editar
+                    <Edit className="h-3.5 w-3.5 sm:mr-1" />
+                    <span className="hidden sm:inline">Editar</span>
                   </Link>
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => setShowDeleteDialog(true)}
-                  className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  className="h-8 w-8 p-0 text-destructive hover:bg-destructive hover:text-destructive-foreground"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
 
-            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide">
               {product.category}
             </p>
-            <h1 className="text-2xl font-bold text-foreground mt-1">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mt-1">
               {product.name}
             </h1>
-            <p className="text-3xl font-bold text-primary mt-3">
+            <p className="text-2xl sm:text-3xl font-bold text-primary mt-2 lg:mt-3">
               ${product.price.toLocaleString()}
             </p>
 
             {business && (
-              <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border">
+              <div className="flex items-center gap-2.5 mt-3 lg:mt-4 pt-3 lg:pt-4 border-t border-border">
                 <img 
                   src={business.logo} 
                   alt={business.name}
-                  className="h-10 w-10 rounded-lg object-cover"
+                  className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg object-cover"
                 />
                 <div>
-                  <p className="text-xs text-muted-foreground">Negocio</p>
-                  <p className="font-medium text-foreground">{business.name}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Negocio</p>
+                  <p className="text-sm sm:text-base font-medium text-foreground">{business.name}</p>
                 </div>
               </div>
             )}
 
             {/* Marketplace Status */}
-            <div className="mt-4 pt-4 border-t border-border">
+            <div className="mt-3 lg:mt-4 pt-3 lg:pt-4 border-t border-border">
               <Button
                 variant={product.postedToMarketplace ? "default" : "outline"}
-                className={product.postedToMarketplace ? "w-full bg-blue-600 hover:bg-blue-700" : "w-full"}
+                size="sm"
+                className={product.postedToMarketplace ? "w-full bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm" : "w-full text-xs sm:text-sm"}
                 onClick={async () => {
                   await updateProduct(product.id, { postedToMarketplace: !product.postedToMarketplace });
                   toast.success(
@@ -251,32 +281,39 @@ ${product.description}`;
                   );
                 }}
               >
-                <Facebook className="h-4 w-4 mr-2" />
-                {product.postedToMarketplace 
-                  ? 'Marcado como subido a Marketplace' 
-                  : 'Marcar como subido a Marketplace'}
+                <Facebook className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
+                <span className="hidden sm:inline">
+                  {product.postedToMarketplace 
+                    ? 'Marcado como subido a Marketplace' 
+                    : 'Marcar como subido a Marketplace'}
+                </span>
+                <span className="sm:hidden">
+                  {product.postedToMarketplace 
+                    ? 'Subido a Marketplace' 
+                    : 'Subir a Marketplace'}
+                </span>
               </Button>
             </div>
           </div>
 
           {/* Description */}
-          <div className="bg-card rounded-xl border border-border p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-3">
+          <div className="bg-card rounded-lg border border-border p-4 lg:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-foreground mb-2 lg:mb-3">
               Descripción
             </h2>
-            <div className="text-foreground whitespace-pre-wrap text-sm leading-relaxed bg-muted/50 rounded-lg p-4">
+            <div className="text-foreground whitespace-pre-wrap text-xs sm:text-sm leading-relaxed bg-muted/50 rounded-lg p-3 lg:p-4">
               {product.description}
             </div>
           </div>
 
           {/* Marketplace Actions */}
-          <div className="bg-card rounded-xl border border-border p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-primary" />
-              Acciones para Marketplace
+          <div className="bg-card rounded-lg border border-border p-4 lg:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 lg:mb-4 flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <span className="text-sm sm:text-base">Acciones para Marketplace</span>
             </h2>
             
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 lg:mb-4">
               <CopyButton text={product.name} field="Nombre" label="Copiar Nombre" />
               <CopyButton text={`$${product.price.toLocaleString()}`} field="Precio" label="Copiar Precio" />
               <CopyButton text={product.category} field="Categoría" label="Copiar Categoría" />
@@ -284,24 +321,25 @@ ${product.description}`;
             </div>
 
             <Button 
-              className="w-full"
+              size="sm"
+              className="w-full text-xs sm:text-sm"
               onClick={copyAllForMarketplace}
             >
               {copiedField === 'Todo' ? (
-                <Check className="h-4 w-4 mr-2" />
+                <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
               ) : (
-                <Copy className="h-4 w-4 mr-2" />
+                <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
               )}
               Copiar Todo para Marketplace
             </Button>
 
-            <p className="text-xs text-muted-foreground text-center mt-3">
+            <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-2 lg:mt-3">
               Copia toda la información formateada para pegar en Facebook Marketplace
             </p>
           </div>
 
           {/* Metadata */}
-          <div className="text-sm text-muted-foreground">
+          <div className="text-xs sm:text-sm text-muted-foreground">
             <p>Creado: {new Date(product.createdAt).toLocaleDateString('es-ES', {
               year: 'numeric',
               month: 'long',
@@ -313,7 +351,7 @@ ${product.description}`;
 
       {/* Delete Confirmation */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent onEscapeKeyDown={() => setShowDeleteDialog(false)}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
             <AlertDialogDescription>

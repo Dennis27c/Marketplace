@@ -224,22 +224,22 @@ export function Header({ title, subtitle }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 h-16 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
-      <div className="flex h-full items-center justify-between px-4 lg:px-6">
+    <header className="sticky top-0 z-50 h-14 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+      <div className="flex h-full items-center justify-between px-4 lg:px-5">
         {/* Left */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3.5">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden"
+            className="lg:hidden h-9 w-9"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+            <h1 className="text-base font-semibold text-foreground">{title}</h1>
             {subtitle && (
-              <p className="text-sm text-muted-foreground">{subtitle}</p>
+              <p className="text-xs text-muted-foreground">{subtitle}</p>
             )}
           </div>
         </div>
@@ -247,13 +247,13 @@ export function Header({ title, subtitle }: HeaderProps) {
         {/* Right */}
         <div className="flex items-center gap-2">
           {activeBusiness && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-muted">
               <img 
                 src={activeBusiness.logo} 
                 alt={activeBusiness.name}
                 className="h-6 w-6 rounded object-cover"
               />
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-xs font-medium text-foreground">
                 {activeBusiness.name}
               </span>
             </div>
@@ -261,24 +261,24 @@ export function Header({ title, subtitle }: HeaderProps) {
           
           <DropdownMenu onOpenChange={handleOpenChange}>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="relative h-9 w-9">
+                <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
                   <Badge 
                     variant="destructive" 
-                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs font-bold"
+                    className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center p-0 text-[10px] font-bold"
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </Badge>
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel className="flex items-center justify-between">
-                <span>Notificaciones</span>
-                <div className="flex items-center gap-2">
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel className="flex items-center justify-between py-2">
+                <span className="text-xs">Notificaciones</span>
+                <div className="flex items-center gap-1.5">
                   {unreadCount > 0 && (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-[10px]">
                       {unreadCount} nueva{unreadCount !== 1 ? 's' : ''}
                     </Badge>
                   )}
@@ -286,7 +286,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 px-2 text-xs"
+                      className="h-5 px-1.5 text-[10px]"
                       onClick={(e) => {
                         e.stopPropagation();
                         clearAllNotifications();
@@ -299,7 +299,7 @@ export function Header({ title, subtitle }: HeaderProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {allNotifications.length > 0 ? (
-                <div className="max-h-[400px] overflow-y-auto">
+                <div className="max-h-[350px] overflow-y-auto">
                   {allNotifications.map((notif) => {
                     // Para notificaciones de BD, verificar si este dispositivo las ha visto
                     // Para notificaciones estáticas, usar el estado de lectura
@@ -308,12 +308,12 @@ export function Header({ title, subtitle }: HeaderProps) {
                       : !notif.read;
                     const isRealTime = (notif as any).isRealTime;
                     const content = (
-                      <div className="flex items-start gap-3 w-full relative">
+                      <div className="flex items-start gap-2 w-full relative">
                         {isUnread && (
-                          <span className="absolute left-0 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-primary" />
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-primary" />
                         )}
                         <div className={cn(
-                          "mt-0.5 flex-shrink-0 ml-4",
+                          "mt-0.5 flex-shrink-0 ml-3 [&>svg]:h-3.5 [&>svg]:w-3.5",
                           notif.type === 'success' && "text-green-600",
                           notif.type === 'warning' && "text-yellow-600",
                           notif.type === 'info' && "text-blue-600"
@@ -321,22 +321,22 @@ export function Header({ title, subtitle }: HeaderProps) {
                           {notif.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             <p className={cn(
-                              "text-sm font-medium",
+                              "text-xs font-medium",
                               isUnread ? "text-foreground font-semibold" : "text-foreground"
                             )}>
                               {notif.title}
                             </p>
                             {isRealTime && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
+                              <span className="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary font-medium">
                                 Nuevo
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">{notif.message}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{notif.message}</p>
                           {isRealTime && (notif as any).timestamp > 0 && (
-                            <p className="text-[10px] text-muted-foreground mt-1">
+                            <p className="text-[9px] text-muted-foreground mt-0.5">
                               {new Date((notif as any).timestamp).toLocaleTimeString('es-ES', { 
                                 hour: '2-digit', 
                                 minute: '2-digit' 
@@ -353,7 +353,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                           key={notif.id}
                           asChild
                           className={cn(
-                            "p-3 cursor-pointer",
+                            "p-2 cursor-pointer",
                             isUnread && "bg-muted/50",
                             isRealTime && isUnread && "bg-primary/5 border-l-2 border-l-primary",
                             notif.type === 'success' && "hover:bg-green-50 dark:hover:bg-green-950",
@@ -381,7 +381,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                       <DropdownMenuItem
                         key={notif.id}
                         className={cn(
-                          "p-3 cursor-pointer",
+                          "p-2 cursor-pointer",
                           isUnread && "bg-muted/50",
                           isRealTime && isUnread && "bg-primary/5 border-l-2 border-l-primary",
                           notif.type === 'success' && "hover:bg-green-50 dark:hover:bg-green-950",
@@ -404,9 +404,9 @@ export function Header({ title, subtitle }: HeaderProps) {
                   })}
                 </div>
               ) : (
-                <div className="p-6 text-center">
-                  <Bell className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">No hay notificaciones</p>
+                <div className="p-4 text-center">
+                  <Bell className="h-6 w-6 mx-auto text-muted-foreground mb-1.5" />
+                  <p className="text-xs text-muted-foreground">No hay notificaciones</p>
                 </div>
               )}
             </DropdownMenuContent>
@@ -414,14 +414,14 @@ export function Header({ title, subtitle }: HeaderProps) {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center">
                   <User className="h-4 w-4 text-primary-foreground" />
                 </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={logout}>
+              <DropdownMenuItem onClick={logout} className="text-xs">
                 Cerrar Sesión
               </DropdownMenuItem>
             </DropdownMenuContent>

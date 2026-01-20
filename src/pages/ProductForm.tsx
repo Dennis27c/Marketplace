@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -7,13 +7,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, ImagePlus, Save, X } from 'lucide-react';
+import { ImagePlus, Save, X } from 'lucide-react';
 import { categories, Product } from '@/data/mockData';
 import { toast } from 'sonner';
 import { uploadImage, validateImageFile } from '@/lib/storage';
@@ -173,16 +181,36 @@ export default function ProductForm() {
       title={isEditing ? 'Editar Producto' : 'Nuevo Producto'} 
       subtitle={isEditing ? 'Modifica la información del producto' : 'Completa los datos para agregar un producto'}
     >
-      {/* Back Button */}
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        onClick={() => navigate(-1)}
-        className="mb-6"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Volver
-      </Button>
+      {/* Breadcrumb */}
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/dashboard" className="text-muted-foreground hover:text-foreground">
+                Inicio
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator>
+            <span className="text-muted-foreground"> &gt; </span>
+          </BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/products" className="text-muted-foreground hover:text-foreground">
+                Productos
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator>
+            <span className="text-muted-foreground"> &gt; </span>
+          </BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <BreadcrumbPage className="font-semibold text-foreground">
+              {isEditing ? 'Editar Producto' : 'Nuevo Producto'}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

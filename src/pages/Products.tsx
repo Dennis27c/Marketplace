@@ -155,23 +155,23 @@ export default function Products() {
       subtitle={`Productos de ${activeBusiness.name}`}
     >
       {/* Filters */}
-      <div className="bg-card rounded-xl border border-border p-4 mb-6 animate-fade-in">
+      <div className="bg-card rounded-lg border border-border p-3 mb-4 animate-fade-in">
         {/* Desktop: All in one line */}
-        <div className="hidden lg:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-2">
           {/* Search */}
           <div className="relative flex-1 min-w-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Buscar productos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-9 h-9 text-sm"
             />
           </div>
           
           {/* Category Filter */}
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-44 h-9 text-sm">
               <SelectValue placeholder="Categoría" />
             </SelectTrigger>
             <SelectContent>
@@ -184,7 +184,7 @@ export default function Products() {
 
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-36 h-9 text-sm">
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
             <SelectContent>
@@ -197,7 +197,7 @@ export default function Products() {
 
           {/* Marketplace Filter */}
           <Select value={marketplaceFilter} onValueChange={setMarketplaceFilter}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-44 h-9 text-sm">
               <SelectValue placeholder="Marketplace" />
             </SelectTrigger>
             <SelectContent>
@@ -208,9 +208,9 @@ export default function Products() {
           </Select>
 
           {/* Add Button */}
-          <Button asChild>
+          <Button asChild size="sm">
             <Link to="/products/new">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
               Nuevo
             </Link>
           </Button>
@@ -332,8 +332,8 @@ export default function Products() {
       </div>
 
       {/* Results count */}
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs text-muted-foreground">
           Mostrando {paginatedProducts.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredProducts.length)} de {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''}
           {filteredProducts.length !== allProducts.length && (
             <span className="ml-1">
@@ -341,7 +341,7 @@ export default function Products() {
             </span>
           )}
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Página {currentPage} de {totalPages}
         </p>
       </div>
@@ -349,7 +349,7 @@ export default function Products() {
       {/* Products Grid */}
       {paginatedProducts.length > 0 ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {paginatedProducts.map((product) => (
               <ProductCard 
                 key={product.id} 
@@ -362,7 +362,7 @@ export default function Products() {
           </div>
           
           {/* Pagination - Always visible */}
-          <div className="mt-6">
+          <div className="mt-4">
             <Pagination>
                 <PaginationContent className="gap-2">
                   <PaginationItem>
@@ -475,7 +475,7 @@ export default function Products() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent onEscapeKeyDown={() => setDeleteId(null)}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
             <AlertDialogDescription>
