@@ -8,7 +8,8 @@ import {
   Plus,
   LogOut,
   X,
-  ChevronDown
+  ChevronDown,
+  CheckCircle2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -21,6 +22,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Negocios', href: '/businesses', icon: Building2 },
   { name: 'Productos', href: '/products', icon: Package },
+  { name: 'Productos Vendidos', href: '/products/sold', icon: CheckCircle2 },
   { name: 'Nuevo Producto', href: '/products/new', icon: Plus },
 ];
 

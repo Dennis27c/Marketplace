@@ -10,6 +10,7 @@ import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Businesses from "@/pages/Businesses";
 import Products from "@/pages/Products";
+import SoldProducts from "@/pages/SoldProducts";
 import ProductForm from "@/pages/ProductForm";
 import ProductDetail from "@/pages/ProductDetail";
 import NotFound from "@/pages/NotFound";
@@ -117,6 +118,11 @@ function AppRoutes() {
       <Route path="/products" element={
         <PrivateRoute>
           <Products />
+        </PrivateRoute>
+      } />
+      <Route path="/products/sold" element={
+        <PrivateRoute>
+          <SoldProducts />
         </PrivateRoute>
       } />
       <Route path="/products/new" element={
