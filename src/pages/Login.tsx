@@ -56,7 +56,7 @@ export default function Login() {
           <h1 className="text-4xl font-bold text-primary-foreground mb-4">
             Gestiona tus productos<br />para Marketplace
           </h1>
-          <p className="text-lg text-primary-foreground/70 max-w-md">
+          <p className="text-lg text-primary-foreground/70 max-w-md mb-8">
             Centraliza la información de todos tus negocios y productos. 
             Publica más rápido y mantén todo organizado en un solo lugar.
           </p>
@@ -68,7 +68,7 @@ export default function Login() {
       </div>
 
       {/* Right Panel - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
@@ -152,6 +152,12 @@ export default function Login() {
               )}
             </Button>
           </form>
+        </div>
+
+        <div className="absolute bottom-8 left-0 right-0 text-center">
+          <p className="text-xs text-muted-foreground">
+            by Rentary
+          </p>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { deleteImage } from '@/lib/storage';
 interface AppContextType {
   // Auth
   isAuthenticated: boolean;
+  userEmail: string | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 
@@ -98,6 +99,7 @@ const appProductToDb = (app: Omit<Product, 'id' | 'createdAt'> | Partial<Product
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [activeBusiness, setActiveBusinessState] = useState<Business | null>(null);
@@ -118,6 +120,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
+      setUserEmail(session?.user?.email || null);
     });
 
     // Listen to auth state changes
@@ -125,6 +128,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
+      setUserEmail(session?.user?.email || null);
     });
 
     return () => {
@@ -426,7 +430,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        console.error('Error de autenticación:', error);
+        console.error('Error de autenticaciรณn:', error);
         return { success: false, error: error.message };
       }
 
@@ -436,10 +440,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return { success: true };
       }
 
-      return { success: false, error: 'No se pudo iniciar sesión' };
+      return { success: false, error: 'No se pudo iniciar sesiรณn' };
     } catch (error: any) {
       console.error('Error inesperado en login:', error);
-      return { success: false, error: error.message || 'Error inesperado al iniciar sesión' };
+      return { success: false, error: error.message || 'Error inesperado al iniciar sesiรณn' };
     }
   };
 
@@ -447,15 +451,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Error al cerrar sesión:', error);
-        toast.error('Error al cerrar sesión');
+        console.error('Error al cerrar sesiรณn:', error);
+        toast.error('Error al cerrar sesiรณn');
       } else {
         setIsAuthenticated(false);
-        toast.info('Sesión cerrada correctamente');
+        setUserEmail(null);
+        toast.info('Sesiรณn cerrada correctamente');
       }
     } catch (error) {
-      console.error('Error inesperado al cerrar sesión:', error);
-      toast.error('Error al cerrar sesión');
+      console.error('Error inesperado al cerrar sesiรณn:', error);
+      toast.error('Error al cerrar sesiรณn');
     }
   };
 
@@ -788,12 +793,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // No bloquear la renderización - cargar datos en segundo plano
-  // La aplicación se renderizará inmediatamente y los datos se cargarán después
+  // No bloquear la renderizaciรณn - cargar datos en segundo plano
+  // La aplicaciรณn se renderizarรก inmediatamente y los datos se cargarรกn despuรฉs
 
   return (
     <AppContext.Provider value={{
       isAuthenticated,
+      userEmail,
       login,
       logout,
       businesses,

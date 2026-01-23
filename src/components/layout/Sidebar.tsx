@@ -9,7 +9,8 @@ import {
   LogOut,
   X,
   ChevronDown,
-  CheckCircle2
+  CheckCircle2,
+  User
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -34,7 +35,8 @@ export function Sidebar() {
     logout, 
     businesses, 
     activeBusiness, 
-    setActiveBusiness 
+    setActiveBusiness,
+    userEmail
   } = useApp();
 
   return (
@@ -149,7 +151,17 @@ export function Sidebar() {
           </nav>
 
           {/* Footer */}
-          <div className="p-2.5 border-t border-sidebar-border">
+          <div className="p-2.5 border-t border-sidebar-border space-y-2">
+            {userEmail && (
+              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-sidebar-accent/50">
+                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-sidebar-primary/20 flex-shrink-0">
+                  <User className="h-3 w-3 text-sidebar-foreground/70" />
+                </div>
+                <p className="text-[10px] text-sidebar-foreground/80 truncate flex-1 leading-tight">
+                  {userEmail}
+                </p>
+              </div>
+            )}
             <button
               onClick={logout}
               className="sidebar-item sidebar-item-inactive w-full text-left"
@@ -157,6 +169,11 @@ export function Sidebar() {
               <LogOut className="h-4 w-4 flex-shrink-0" />
               <span className="font-medium text-xs">Cerrar Sesión</span>
             </button>
+            <div className="px-2.5 pt-1">
+              <p className="text-[10px] text-sidebar-foreground/40 text-center">
+                by Rentary
+              </p>
+            </div>
           </div>
         </div>
       </aside>
