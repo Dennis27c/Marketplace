@@ -264,14 +264,6 @@ La aplicación usa suscripciones en tiempo real de Supabase para notificaciones.
 - Útil para tener una vista consolidada de ventas sin cambiar el negocio activo
 - Los filtros en desktop están siempre visibles en la misma línea que la búsqueda
 
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
 ## 📄 Licencia
 
 Este proyecto es privado y de uso interno.

@@ -5,24 +5,38 @@ import { Package, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 export default function Login() {
-  const [email, setEmail] = useState('admin@markethub.com');
-  const [password, setPassword] = useState('demo123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { login } = useApp();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    login();
-    navigate('/dashboard');
+    try {
+      const result = await login(email, password);
+      
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setError(result.error || 'Error al iniciar sesión');
+        toast.error(result.error || 'Error al iniciar sesión');
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Error inesperado al iniciar sesión';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -72,15 +86,25 @@ export default function Login() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+                {error}
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="email">Correo electrónico</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError(null);
+                }}
                 placeholder="tu@email.com"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -91,14 +115,19 @@ export default function Login() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError(null);
+                  }}
                   placeholder="••••••••"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -123,10 +152,6 @@ export default function Login() {
               )}
             </Button>
           </form>
-
-          <p className="text-center text-sm text-muted-foreground mt-8">
-            Demo: Usa las credenciales preestablecidas
-          </p>
         </div>
       </div>
     </div>

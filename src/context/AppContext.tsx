@@ -7,8 +7,8 @@ import { deleteImage } from '@/lib/storage';
 interface AppContextType {
   // Auth
   isAuthenticated: boolean;
-  login: () => void;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
 
   // Businesses
   businesses: Business[];
@@ -97,9 +97,7 @@ const appProductToDb = (app: Omit<Product, 'id' | 'createdAt'> | Partial<Product
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('isAuthenticated') === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [activeBusiness, setActiveBusinessState] = useState<Business | null>(null);
@@ -114,6 +112,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     link?: string;
     read: boolean;
   }>>([]);
+
+  // Check for existing session and listen to auth changes
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    // Listen to auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Load data from Supabase on mount
   useEffect(() => {
@@ -394,11 +411,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Persist authentication state
-  useEffect(() => {
-    localStorage.setItem('isAuthenticated', String(isAuthenticated));
-  }, [isAuthenticated]);
-
   // Persist active business
   useEffect(() => {
     if (activeBusiness) {
@@ -406,14 +418,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [activeBusiness]);
 
-  const login = () => {
-    setIsAuthenticated(true);
-    toast.success('Bienvenido al sistema');
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('Error de autenticación:', error);
+        return { success: false, error: error.message };
+      }
+
+      if (data.session) {
+        setIsAuthenticated(true);
+        toast.success('Bienvenido al sistema');
+        return { success: true };
+      }
+
+      return { success: false, error: 'No se pudo iniciar sesión' };
+    } catch (error: any) {
+      console.error('Error inesperado en login:', error);
+      return { success: false, error: error.message || 'Error inesperado al iniciar sesión' };
+    }
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    toast.info('Sesión cerrada correctamente');
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error al cerrar sesión:', error);
+        toast.error('Error al cerrar sesión');
+      } else {
+        setIsAuthenticated(false);
+        toast.info('Sesión cerrada correctamente');
+      }
+    } catch (error) {
+      console.error('Error inesperado al cerrar sesión:', error);
+      toast.error('Error al cerrar sesión');
+    }
   };
 
   const setActiveBusiness = (business: Business | null) => {
