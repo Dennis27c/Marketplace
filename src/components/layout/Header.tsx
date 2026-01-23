@@ -33,7 +33,7 @@ export function Header({ title, subtitle }: HeaderProps) {
     clearAllNotifications
   } = useApp();
   
-  // Estado para notificaciones estáticas vistas (persistido en localStorage)
+  // Estado para notificaciones estรกticas vistas (persistido en localStorage)
   // Guardamos un hash de los datos para detectar cuando cambian
   const [viewedStaticNotifications, setViewedStaticNotifications] = useState<Set<string>>(() => {
     const saved = localStorage.getItem('viewedStaticNotifications');
@@ -64,7 +64,7 @@ export function Header({ title, subtitle }: HeaderProps) {
     localStorage.setItem('lastStaticNotificationsHash', staticNotificationsHash);
   }, [staticNotificationsHash]);
 
-  // Calcular notificaciones estáticas (solo las no vistas)
+  // Calcular notificaciones estรกticas (solo las no vistas)
   const staticNotifications = useMemo(() => {
     const notifs: Array<{
       id: string;
@@ -92,7 +92,7 @@ export function Header({ title, subtitle }: HeaderProps) {
     const availableProducts = businessProducts.filter(p => p.status === 'available').length;
     const notPostedProducts = businessProducts.filter(p => !p.postedToMarketplace && p.status === 'available').length;
 
-    // Notificación de productos recientes (solo si no ha sido vista)
+    // Notificaciรณn de productos recientes (solo si no ha sido vista)
     if (recentProducts > 0 && !viewedStaticNotifications.has('recent-products')) {
       notifs.push({
         id: 'recent-products',
@@ -104,7 +104,7 @@ export function Header({ title, subtitle }: HeaderProps) {
       });
     }
 
-    // Notificación de productos vendidos (solo si no ha sido vista)
+    // Notificaciรณn de productos vendidos (solo si no ha sido vista)
     if (soldProducts > 0 && !viewedStaticNotifications.has('sold-products')) {
       notifs.push({
         id: 'sold-products',
@@ -116,7 +116,7 @@ export function Header({ title, subtitle }: HeaderProps) {
       });
     }
 
-    // Notificación de productos no subidos a marketplace (solo si no ha sido vista)
+    // Notificaciรณn de productos no subidos a marketplace (solo si no ha sido vista)
     if (notPostedProducts > 0 && !viewedStaticNotifications.has('not-posted')) {
       notifs.push({
         id: 'not-posted',
@@ -128,7 +128,7 @@ export function Header({ title, subtitle }: HeaderProps) {
       });
     }
 
-    // Notificación si no hay productos (siempre se muestra si aplica)
+    // Notificaciรณn si no hay productos (siempre se muestra si aplica)
     if (businessProducts.length === 0) {
       notifs.push({
         id: 'no-products',
@@ -143,11 +143,11 @@ export function Header({ title, subtitle }: HeaderProps) {
     return notifs;
   }, [activeBusiness, products, viewedStaticNotifications]);
 
-  // Combinar notificaciones estáticas con notificaciones de la BD
+  // Combinar notificaciones estรกticas con notificaciones de la BD
   const allNotifications = useMemo(() => {
     const staticNotifs = staticNotifications.map(notif => ({
       ...notif,
-      timestamp: 0, // Las estáticas no tienen timestamp
+      timestamp: 0, // Las estรกticas no tienen timestamp
       isRealTime: false,
       read: false
     }));
@@ -168,7 +168,7 @@ export function Header({ title, subtitle }: HeaderProps) {
       read: notif.read
     }));
 
-    // Combinar y ordenar por timestamp (más recientes primero)
+    // Combinar y ordenar por timestamp (mรกs recientes primero)
     return [...realTimeNotifs, ...staticNotifs].sort((a, b) => {
       if (a.timestamp === 0 && b.timestamp === 0) return 0;
       if (a.timestamp === 0) return 1;
@@ -183,7 +183,7 @@ export function Header({ title, subtitle }: HeaderProps) {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
-  // Calcular notificaciones no leídas por este dispositivo
+  // Calcular notificaciones no leรญdas por este dispositivo
   const unreadNotifications = useMemo(() => {
     // Solo contar notificaciones de BD que este dispositivo NO ha visto
     const unread = dbNotifications.filter(n => !viewedNotificationIds.has(n.id));
@@ -195,7 +195,7 @@ export function Header({ title, subtitle }: HeaderProps) {
   // Marcar todas las notificaciones como vistas por este dispositivo cuando se abre el dropdown
   const handleOpenChange = (open: boolean) => {
     if (open) {
-      // Marcar todas las notificaciones estáticas como vistas (solo si hay)
+      // Marcar todas las notificaciones estรกticas como vistas (solo si hay)
       const newViewedStatic = new Set(viewedStaticNotifications);
       staticNotifications.forEach(notif => {
         // No marcar "no-products" como vista (debe seguir apareciendo si no hay productos)
@@ -302,7 +302,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                 <div className="max-h-[350px] overflow-y-auto">
                   {allNotifications.map((notif) => {
                     // Para notificaciones de BD, verificar si este dispositivo las ha visto
-                    // Para notificaciones estáticas, usar el estado de lectura
+                    // Para notificaciones estรกticas, usar el estado de lectura
                     const isUnread = (notif as any).isRealTime 
                       ? !viewedNotificationIds.has(notif.id)
                       : !notif.read;
@@ -337,9 +337,12 @@ export function Header({ title, subtitle }: HeaderProps) {
                           <p className="text-[10px] text-muted-foreground mt-0.5">{notif.message}</p>
                           {isRealTime && (notif as any).timestamp > 0 && (
                             <p className="text-[9px] text-muted-foreground mt-0.5">
-                              {new Date((notif as any).timestamp).toLocaleTimeString('es-ES', { 
+                              {new Date((notif as any).timestamp).toLocaleString('es-ES', { 
+                                day: '2-digit',
+                                month: 'short',
                                 hour: '2-digit', 
-                                minute: '2-digit' 
+                                minute: '2-digit',
+                                hour12: true
                               })}
                             </p>
                           )}
@@ -422,7 +425,7 @@ export function Header({ title, subtitle }: HeaderProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={logout} className="text-xs">
-                Cerrar Sesión
+                Cerrar Sesiรณn
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
